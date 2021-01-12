@@ -40,5 +40,5 @@ if (isset($_POST) && !empty($_POST)) {
     } else {
         $data = $user->getUsers();
     }
-    echo json_encode($data);
+    echo json_encode($data->data);
 }

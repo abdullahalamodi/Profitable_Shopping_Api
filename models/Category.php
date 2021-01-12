@@ -1,7 +1,7 @@
-<?php 
-include('../Database/Database.php');  //it's incloded in User file ^_^
-class Category{
-
+<?php
+include('../Database/Database.php');
+class Category
+{
     public $id;
     public $name;
     private $database;
@@ -14,61 +14,91 @@ class Category{
 
     public function getCategories()
     {
-        $query = $this->database->prepare("select * from categories");
-        $query->execute();
-        $data = $query->fetchAll(PDO::FETCH_OBJ);
-        return $data;
+        return $this->executeFunction(
+            "SELECT * from categories",
+            null,
+            true,
+            true,
+        );
     }
 
     public function getCategoryById($id)
     {
-        $query = $this->database->prepare("select * from categories where id=?");
-        $query->execute([$id]);
-        $data = $query->fetchAll(PDO::FETCH_OBJ);
-        return $data;
+        return $this->executeFunction(
+            "SELECT * from categories where id=?",
+            [$id],
+            true,
+        );
     }
 
     public function getCategoryByTitle($title)
     {
-        $query = $this->database->prepare("select * from categories where name like ?");
-        $query->execute([$title]);
-        $data = $query->fetch(PDO::FETCH_OBJ);
-        return $data;
+        return $this->executeFunction(
+            "SELECT * from categories where name like ?",
+            [$title],
+            true
+        );
     }
 
-    public function addCategory($data)
+    public function addCategory()
     {
-        try {
-            $query = $this->database->prepare("insert into categories values(?,?)");
-            $query->execute([$this->id, $this->name]);
-            return true;
-        } catch (PDOException $e) {
-            return false;
-        }
+        return $this->executeFunction(
+            "INSERT INTO `categories`(`name`) VALUES (?)",
+            [$this->name]
+        );
     }
 
     public function updateCategory($id)
     {
-        $category = $this->getCategoryById($id);
-        ($this->name != null) ? $category->name =  $this->name : null;
-        try {
-            $query = $this->database->prepare("UPDATE `categories` SET `name`=? WHERE id = ?");
-            $query->execute([$this->name,$id]);
-            return true;
-        } catch (PDOException $e) {
-            return false;
+        $response = $this->getCategoryById($id);
+        if ($response->case) {
+            ($this->name != null) ? $response->data->name =  $this->name : null;
+            return
+                $this->executeFunction(
+                    "UPDATE `categories` SET `name`=? WHERE id = ?",
+                    [$response->data->name, $id],
+                );
         }
+        return $response;
     }
 
     public function deleteCategory($id)
     {
-         try {
-            $query = $this->database->prepare("DELETE FROM categories WHERE id=?");
-            $query->execute([$id]);
-            return true;
+        return
+            $this->executeFunction(
+                "DELETE FROM categories WHERE id=?",
+                [$id],
+            );
+    }
+
+    private function executeFunction(
+        String $queryText,
+        array $params = null,
+        bool $isData = false,
+        bool $isList = false,
+        string $fieledMessage = "request fieled",
+        string $successMessage = "request success"
+    ) {
+        $response = new Response();
+        try {
+            $query = $this->database->prepare($queryText);
+            if ($query->execute($params)) {
+                $response->case = true;
+                if ($isData) {
+                    if ($isList) {
+                        $response->data = $query->fetchAll(PDO::FETCH_OBJ);
+                    } else
+                        $response->data = $query->fetch(PDO::FETCH_OBJ);
+                } else
+                    $response->data = $successMessage;
+            } else {
+                $response->case = false;
+                $response->data = $fieledMessage;
+            }
         } catch (PDOException $e) {
-            return false;
+            $response->case = false;
+            $response->data = "$fieledMessage cuse : $e";
         }
+        return $response;
     }
 }
-?>

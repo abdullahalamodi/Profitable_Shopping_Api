@@ -1,40 +1,29 @@
 <?php
 include('../models/Category.php');
+include('../models/Response.php');
+include('../models/ProductImage.php');
+
 $category = new Category();
+$response = new Response();
 $method = $_SERVER['REQUEST_METHOD'];
-//post
+
 if (isset($_POST) && !empty($_POST)) {
     //update
-    if ($_GET['id'] >= 0) {
+    if (isset($_GET['id'])) {
         $category->name = $_POST['name'];
-
-        if ($category->updateCategory($_GET['id'])) {
-            echo "category updated successfuly ^_9";
-        } else {
-            echo "filed to update category !!";
-        }
-        // add
+        $response = $category->updateCategory($_GET['id']);
     } else {
-        $category->id = $_POST['id'];
+        //add
         $category->name = $_POST['name'];
-
-        if ($category->addCategory()) {
-            echo "category added successfuly ^_9";
-        } else {
-            echo "filed to add category !!";
-        }
+        $response = $category->addCategory();
     }
 } elseif ($method == "DELETE") {
-    if ($category->deleteCategory($_GET['id'])) {
-        echo "category deleted successfuly ^_9";
-    } else {
-        echo "filed to delete category !!";
-    }
+    $response = $category->deleteCategory($_GET['id']);
 } else {
     if (isset($_GET['id'])) {
-        $data = $category->getCategoryById($_GET['id']);
+        $response = $category->getCategoryById($_GET['id']);
     } else {
-        $data = $category->getCategories();
+        $response = $category->getCategories();
     }
-    echo json_encode($data);
 }
+echo json_encode($response->data);

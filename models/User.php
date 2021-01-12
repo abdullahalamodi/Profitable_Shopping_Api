@@ -34,8 +34,11 @@ class User
     public function addUser()
     {
         try {
-            $query = $this->database->prepare("insert into users values(?,?,?,?)");
-            $query->execute([$this->id, $this->name, $this->location, $this->phone]);
+            $query = $this->database->prepare("insert into users values(?,?,?)");
+            $query->execute([
+                $this->name,
+                $this->location,
+                $this->phone]);
             return true;
         } catch (PDOException $e) {
             return false;
@@ -49,9 +52,16 @@ class User
         ($this->image != null) ? $user->location =  $this->location : "";
         ($this->details != null) ? $user->phone =  $this->phone : "";
         try {
-            $query = $this->database->prepare("UPDATE `users` SET `name`=?,`location`=?,
-            `phone`=? WHERE id = ?");
-            $query->execute([$this->id, $this->name, $this->location, $this->phone]);
+            $query = $this->database->prepare("UPDATE `users` SET
+             `name`=?,
+             `location`=?,
+             `phone`=?
+             WHERE id = ?");
+            $query->execute([
+                $user->name,
+                $user->location,
+                $user->phone,
+                $id]);
             return true;
         } catch (PDOException $e) {
             return false;
